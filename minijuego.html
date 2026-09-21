@@ -176,7 +176,7 @@
     background: rgba(201,162,39,0.10);
   }
   .suggestion-name { font-weight: 600; font-size: 0.96rem; }
-  .suggestion-brand { color: var(--ink-dim); font-size: 0.82rem; white-space: nowrap; }
+  .suggestion-brand { color: var(--ink-dim); font-size: 0.78rem; white-space: nowrap; text-align: right; flex-shrink: 0; }
 
   .hint-row {
     display: flex;
@@ -226,10 +226,13 @@
   /* ---------- tabla de intentos ---------- */
   .board-wrap {
     margin-top: 28px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   table.board {
     width: 100%;
+    min-width: 640px;
     table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0 8px;
@@ -238,16 +241,16 @@
   table.board thead th {
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     text-transform: none;
     letter-spacing: 0.02em;
     color: var(--ink-dim);
     text-align: left;
-    padding: 0 6px 6px;
+    padding: 0 5px 6px;
     border-bottom: 1px solid var(--line);
     overflow-wrap: break-word;
   }
-  table.board thead th:first-child { width: 20%; }
+  table.board thead th:first-child { width: 15%; }
 
   table.board tbody tr {
     background: var(--card-bg);
@@ -478,10 +481,10 @@
   @media (max-width: 480px) {
     main { padding: 32px 10px 60px; }
     #watchInput { padding: 14px 14px; font-size: 1rem; }
-    table.board thead th { font-size: 0.6rem; padding: 0 3px 6px; }
-    table.board tbody td { padding: 8px 3px; font-size: 0.72rem; }
-    .tile { padding: 4px 5px; font-size: 0.72rem; }
-    td.cell-guess-target { font-size: 0.88rem; }
+    table.board thead th { font-size: 0.62rem; padding: 0 4px 6px; }
+    table.board tbody td { padding: 8px 4px; font-size: 0.76rem; }
+    .tile { padding: 4px 6px; font-size: 0.76rem; }
+    td.cell-guess-target { font-size: 0.9rem; }
   }
 </style>
 </head>
@@ -501,7 +504,7 @@
       </svg>
     </span>
     <h1>Reloj<em>VLE</em></h1>
-    <p class="subtitle">Hay un reloj icónico escondido. Escribí un modelo, comparalo por marca, país, estilo, movimiento, año y resistencia al agua — y acercate cada intento. Sin límite de intentos.</p>
+    <p class="subtitle">Hay un reloj icónico escondido. Escribí un modelo, comparalo por marca, país, estilo, movimiento, complicación, precio, año y resistencia al agua — y acercate cada intento. Sin límite de intentos.</p>
   </header>
 
   <div class="challenge-banner narrow" id="challengeBanner">
@@ -538,9 +541,11 @@
           <th>Marca</th>
           <th>País</th>
           <th>Estilo</th>
-          <th>Movimiento</th>
+          <th>Mov.</th>
+          <th>Complic.</th>
+          <th>Precio</th>
           <th>Año</th>
-          <th>Resist. agua</th>
+          <th>H₂O</th>
         </tr>
       </thead>
       <tbody id="boardBody"></tbody>
@@ -568,7 +573,7 @@
 
   <footer class="credits">
     Reloj del día — se repite igual para todos hasta la medianoche.<br>
-    Base de datos: 21 marcas icónicas, ~3 modelos representativos cada una.
+    Base de datos: 21 marcas icónicas, ~19 modelos representativos cada una (399 en total).
   </footer>
 </main>
 
@@ -580,90 +585,447 @@
   // Base de datos de relojes
   // ---------------------------------------------------------------
   const WATCHES = [
-    {marca:"Citizen", modelo:"Promaster Diver", pais:"Japón", estilo:"Buceo", movimiento:"Cuarzo (Eco-Drive)", anio:1989, resistencia:200},
-    {marca:"Citizen", modelo:"Tsuyosa", pais:"Japón", estilo:"Casual", movimiento:"Automático", anio:2021, resistencia:50},
-    {marca:"Citizen", modelo:"Attesa", pais:"Japón", estilo:"Dress", movimiento:"Cuarzo (Eco-Drive)", anio:1993, resistencia:100},
+      // ---- Citizen ----
+      {marca:"Citizen", modelo:"Promaster Diver", pais:"Japón", estilo:"Buceo", movimiento:"Cuarzo (Eco-Drive)", anio:1989, resistencia:200, precio:300, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Tsuyosa", pais:"Japón", estilo:"Casual", movimiento:"Automático", anio:2021, resistencia:50, precio:350, complicacion:"Sin complicación"},
+      {marca:"Citizen", modelo:"Attesa", pais:"Japón", estilo:"Dress", movimiento:"Cuarzo (Eco-Drive)", anio:1993, resistencia:100, precio:500, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Promaster Aqualand", pais:"Japón", estilo:"Buceo", movimiento:"Cuarzo (Eco-Drive)", anio:1985, resistencia:200, precio:400, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Promaster Sky Blue Angels", pais:"Japón", estilo:"Piloto", movimiento:"Cuarzo (Eco-Drive)", anio:1995, resistencia:100, precio:550, complicacion:"Cronógrafo"},
+      {marca:"Citizen", modelo:"Promaster Land Altichron", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo (Eco-Drive)", anio:1995, resistencia:100, precio:500, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Series8 890", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2022, resistencia:50, precio:900, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Eco-Drive One", pais:"Japón", estilo:"Dress", movimiento:"Cuarzo (Eco-Drive)", anio:2018, resistencia:30, precio:450, complicacion:"Sin complicación"},
+      {marca:"Citizen", modelo:"Chandler", pais:"Japón", estilo:"Casual", movimiento:"Automático", anio:2019, resistencia:100, precio:200, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Corso", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2018, resistencia:50, precio:250, complicacion:"Sin complicación"},
+      {marca:"Citizen", modelo:"NY0040 Diver Automático", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:1980, resistencia:100, precio:250, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Satellite Wave GPS", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo (GPS)", anio:2011, resistencia:200, precio:2500, complicacion:"GMT / segundo huso"},
+      {marca:"Citizen", modelo:"Super Titanium Diver", pais:"Japón", estilo:"Buceo", movimiento:"Cuarzo (Eco-Drive)", anio:2000, resistencia:200, precio:700, complicacion:"Fechador"},
+      {marca:"Citizen", modelo:"Bullhead Chronograph", pais:"Japón", estilo:"Cronógrafo", movimiento:"Automático", anio:1976, resistencia:50, precio:450, complicacion:"Cronógrafo"},
+      {marca:"Citizen", modelo:"Tsuno Chrono", pais:"Japón", estilo:"Cronógrafo", movimiento:"Automático", anio:2020, resistencia:100, precio:500, complicacion:"Cronógrafo"},
+      {marca:"Citizen", modelo:"Cavalman", pais:"Japón", estilo:"Dress/Vintage", movimiento:"Automático", anio:1970, resistencia:30, precio:300, complicacion:"Sin complicación"},
+      {marca:"Citizen", modelo:"X8 Chrono", pais:"Japón", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:30, precio:400, complicacion:"Cronógrafo"},
+      {marca:"Citizen", modelo:"Grand Citizen Vintage", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:1970, resistencia:30, precio:350, complicacion:"Sin complicación"},
+      {marca:"Citizen", modelo:"Eco-Drive Riiiver", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo (Eco-Drive)", anio:2021, resistencia:50, precio:200, complicacion:"Fechador"},
 
-    {marca:"Orient", modelo:"Bambino", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2011, resistencia:30},
-    {marca:"Orient", modelo:"Mako", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2008, resistencia:200},
-    {marca:"Orient", modelo:"Kamasu", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2018, resistencia:200},
+      // ---- Orient ----
+      {marca:"Orient", modelo:"Bambino", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2011, resistencia:30, precio:150, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Mako", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2008, resistencia:200, precio:150, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Kamasu", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2018, resistencia:200, precio:250, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Ray II", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2016, resistencia:200, precio:180, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Orient Star Classic", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:1951, resistencia:50, precio:600, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Triton", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2020, resistencia:200, precio:300, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Sun and Moon", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2013, resistencia:50, precio:350, complicacion:"Fase lunar"},
+      {marca:"Orient", modelo:"Bambino Small Seconds", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:30, precio:160, complicacion:"Sin complicación"},
+      {marca:"Orient", modelo:"Defender", pais:"Japón", estilo:"Deportivo", movimiento:"Automático", anio:2013, resistencia:100, precio:250, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"M-Force", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:1990, resistencia:200, precio:400, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Neptune", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:1990, resistencia:200, precio:300, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Revival Diver 1964", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2020, resistencia:200, precio:350, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Multi-Year Calendar", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2018, resistencia:50, precio:500, complicacion:"Calendario perpetuo"},
+      {marca:"Orient", modelo:"Orient Star Skeleton", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2020, resistencia:50, precio:800, complicacion:"Esqueleto"},
+      {marca:"Orient", modelo:"King Diver 2nd Gen", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2021, resistencia:200, precio:400, complicacion:"Fechador"},
+      {marca:"Orient", modelo:"Poet", pais:"Japón", estilo:"Dress/Vintage", movimiento:"Automático", anio:1970, resistencia:30, precio:200, complicacion:"Sin complicación"},
+      {marca:"Orient", modelo:"Flight", pais:"Japón", estilo:"Piloto", movimiento:"Automático", anio:2015, resistencia:100, precio:250, complicacion:"GMT / segundo huso"},
+      {marca:"Orient", modelo:"Weekly Auto", pais:"Japón", estilo:"Casual", movimiento:"Automático", anio:2018, resistencia:50, precio:200, complicacion:"Día y fecha"},
+      {marca:"Orient", modelo:"Contemporary Chronograph", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2015, resistencia:50, precio:200, complicacion:"Cronógrafo"},
 
-    {marca:"Casio", modelo:"G-Shock DW-5000C", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:1983, resistencia:200},
-    {marca:"Casio", modelo:"Edifice", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:1997, resistencia:100},
-    {marca:"Casio", modelo:"F-91W", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo digital", anio:1989, resistencia:30},
+      // ---- Casio ----
+      {marca:"Casio", modelo:"G-Shock DW-5000C", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:1983, resistencia:200, precio:150, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Edifice", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:1997, resistencia:100, precio:120, complicacion:"Cronógrafo"},
+      {marca:"Casio", modelo:"F-91W", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo digital", anio:1989, resistencia:30, precio:20, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"G-Shock Mudmaster", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:2015, resistencia:200, precio:300, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"G-Shock Frogman", pais:"Japón", estilo:"Buceo", movimiento:"Cuarzo digital", anio:1993, resistencia:200, precio:800, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Oceanus", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Cuarzo (radio solar)", anio:2003, resistencia:100, precio:600, complicacion:"GMT / segundo huso"},
+      {marca:"Casio", modelo:"Pro Trek", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:1994, resistencia:100, precio:300, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Vintage A158", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo digital", anio:1980, resistencia:30, precio:30, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"G-Shock MTG", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo", anio:1997, resistencia:200, precio:500, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"G-Shock GA-2100 CasiOak", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:2019, resistencia:200, precio:100, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Databank", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo digital", anio:1984, resistencia:30, precio:40, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Edifice EQB", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo (Bluetooth)", anio:2016, resistencia:100, precio:250, complicacion:"Cronógrafo"},
+      {marca:"Casio", modelo:"Baby-G", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:1994, resistencia:100, precio:80, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"G-Shock Rangeman", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:2010, resistencia:200, precio:300, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Lineage", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Cuarzo", anio:1996, resistencia:100, precio:300, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"G-Shock DW-6900", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo digital", anio:1995, resistencia:200, precio:60, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Wave Ceptor", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo (radiocontrolado)", anio:1996, resistencia:100, precio:100, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Vintage A700", pais:"Japón", estilo:"Casual", movimiento:"Cuarzo digital", anio:1990, resistencia:30, precio:30, complicacion:"Fechador"},
+      {marca:"Casio", modelo:"Edifice Scuderia", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2008, resistencia:100, precio:200, complicacion:"Cronógrafo"},
 
-    {marca:"Seiko", modelo:"5 Sports", pais:"Japón", estilo:"Deportivo", movimiento:"Automático", anio:1963, resistencia:100},
-    {marca:"Seiko", modelo:"Prospex Turtle", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:1976, resistencia:200},
-    {marca:"Seiko", modelo:"Presage", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2016, resistencia:50},
+      // ---- Seiko ----
+      {marca:"Seiko", modelo:"5 Sports", pais:"Japón", estilo:"Deportivo", movimiento:"Automático", anio:1963, resistencia:100, precio:300, complicacion:"Día y fecha"},
+      {marca:"Seiko", modelo:"Prospex Turtle", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:1976, resistencia:200, precio:500, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Presage", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2016, resistencia:50, precio:400, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Prospex Samurai", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2004, resistencia:200, precio:450, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Prospex Alpinist", pais:"Japón", estilo:"Deportivo", movimiento:"Automático", anio:1959, resistencia:200, precio:600, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Prospex Sumo", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2007, resistencia:200, precio:700, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Astron", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Cuarzo (GPS solar)", anio:2012, resistencia:100, precio:1500, complicacion:"GMT / segundo huso"},
+      {marca:"Seiko", modelo:"King Seiko", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:1965, resistencia:50, precio:2000, complicacion:"Sin complicación"},
+      {marca:"Seiko", modelo:"Prospex Speedtimer", pais:"Japón", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:100, precio:800, complicacion:"Cronógrafo"},
+      {marca:"Seiko", modelo:"5 Sports SKX-style", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:1996, resistencia:200, precio:350, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Lukia", pais:"Japón", estilo:"Dress", movimiento:"Cuarzo", anio:1998, resistencia:50, precio:400, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Marinemaster", pais:"Japón", estilo:"Buceo", movimiento:"Automático", anio:2000, resistencia:300, precio:3000, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Prospex LX", pais:"Japón", estilo:"Buceo/Lujo", movimiento:"Spring Drive", anio:2019, resistencia:200, precio:3500, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Coutura", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2010, resistencia:100, precio:350, complicacion:"Cronógrafo"},
+      {marca:"Seiko", modelo:"Selection", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2018, resistencia:50, precio:400, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Chronograph SND", pais:"Japón", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2000, resistencia:100, precio:150, complicacion:"Cronógrafo"},
+      {marca:"Seiko", modelo:"Prospex Fieldmaster", pais:"Japón", estilo:"Deportivo", movimiento:"Cuarzo", anio:2019, resistencia:100, precio:300, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Kinetic", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Cuarzo cinético", anio:1988, resistencia:100, precio:350, complicacion:"Fechador"},
+      {marca:"Seiko", modelo:"Prospex Solar Diver", pais:"Japón", estilo:"Buceo", movimiento:"Cuarzo solar", anio:2018, resistencia:200, precio:400, complicacion:"Fechador"},
 
-    {marca:"Bulova", modelo:"Lunar Pilot", pais:"Estados Unidos", estilo:"Piloto/Cronógrafo", movimiento:"Cuarzo", anio:2016, resistencia:50},
-    {marca:"Bulova", modelo:"Marine Star", pais:"Estados Unidos", estilo:"Deportivo", movimiento:"Cuarzo", anio:1994, resistencia:100},
-    {marca:"Bulova", modelo:"Accutron", pais:"Estados Unidos", estilo:"Dress", movimiento:"Electrónico (diapasón)", anio:1960, resistencia:30},
+      // ---- Bulova ----
+      {marca:"Bulova", modelo:"Lunar Pilot", pais:"Estados Unidos", estilo:"Piloto/Cronógrafo", movimiento:"Cuarzo", anio:2016, resistencia:50, precio:500, complicacion:"Cronógrafo"},
+      {marca:"Bulova", modelo:"Marine Star", pais:"Estados Unidos", estilo:"Deportivo", movimiento:"Cuarzo", anio:1994, resistencia:100, precio:300, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Accutron", pais:"Estados Unidos", estilo:"Dress", movimiento:"Electrónico (diapasón)", anio:1960, resistencia:30, precio:1200, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Precisionist", pais:"Estados Unidos", estilo:"Dress/Deportivo", movimiento:"Cuarzo (alta frecuencia)", anio:2010, resistencia:100, precio:400, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Computron", pais:"Estados Unidos", estilo:"Casual", movimiento:"Cuarzo digital", anio:1976, resistencia:30, precio:250, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Curv", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo", anio:2016, resistencia:50, precio:500, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Classic", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:30, precio:350, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Military UHF", pais:"Estados Unidos", estilo:"Piloto", movimiento:"Cuarzo", anio:2018, resistencia:100, precio:300, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Surveyor", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Automático", anio:1960, resistencia:30, precio:300, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Oceanographer Devil Diver", pais:"Estados Unidos", estilo:"Buceo", movimiento:"Automático", anio:1970, resistencia:666, precio:400, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Sea King", pais:"Estados Unidos", estilo:"Buceo", movimiento:"Automático", anio:1960, resistencia:200, precio:350, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Snorkel", pais:"Estados Unidos", estilo:"Buceo", movimiento:"Cuarzo", anio:1970, resistencia:200, precio:250, complicacion:"Fechador"},
+      {marca:"Bulova", modelo:"Jet Star", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Automático", anio:1969, resistencia:30, precio:300, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Chronograph C", pais:"Estados Unidos", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:1970, resistencia:50, precio:300, complicacion:"Cronógrafo"},
+      {marca:"Bulova", modelo:"American Clipper", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Automático", anio:1950, resistencia:30, precio:300, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Aerojet", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Automático", anio:1960, resistencia:30, precio:300, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Astronaut", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Automático", anio:1963, resistencia:30, precio:350, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Wilton", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo", anio:2015, resistencia:30, precio:200, complicacion:"Sin complicación"},
+      {marca:"Bulova", modelo:"Regatta", pais:"Estados Unidos", estilo:"Deportivo", movimiento:"Cuarzo", anio:2015, resistencia:100, precio:300, complicacion:"Cronógrafo"},
 
-    {marca:"Timex", modelo:"Weekender", pais:"Estados Unidos", estilo:"Casual", movimiento:"Cuarzo", anio:2008, resistencia:30},
-    {marca:"Timex", modelo:"Ironman", pais:"Estados Unidos", estilo:"Deportivo/Digital", movimiento:"Cuarzo digital", anio:1986, resistencia:50},
-    {marca:"Timex", modelo:"Marlin", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Mecánico manual", anio:1960, resistencia:30},
+      // ---- Timex ----
+      {marca:"Timex", modelo:"Weekender", pais:"Estados Unidos", estilo:"Casual", movimiento:"Cuarzo", anio:2008, resistencia:30, precio:50, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"Ironman", pais:"Estados Unidos", estilo:"Deportivo/Digital", movimiento:"Cuarzo digital", anio:1986, resistencia:50, precio:60, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Marlin", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Mecánico manual", anio:1960, resistencia:30, precio:200, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"Q Timex", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Cuarzo", anio:1979, resistencia:50, precio:200, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Expedition", pais:"Estados Unidos", estilo:"Deportivo", movimiento:"Cuarzo", anio:1994, resistencia:100, precio:60, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"MK1", pais:"Estados Unidos", estilo:"Deportivo/Piloto", movimiento:"Cuarzo/Automático", anio:2017, resistencia:50, precio:150, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Camper", pais:"Estados Unidos", estilo:"Casual", movimiento:"Cuarzo", anio:2015, resistencia:30, precio:50, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"Easy Reader", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo", anio:1977, resistencia:30, precio:50, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Fairfield", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo", anio:2015, resistencia:30, precio:80, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Waterbury", pais:"Estados Unidos", estilo:"Casual", movimiento:"Cuarzo/Automático", anio:2015, resistencia:50, precio:100, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Allied", pais:"Estados Unidos", estilo:"Deportivo", movimiento:"Cuarzo", anio:2016, resistencia:100, precio:100, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Navi", pais:"Estados Unidos", estilo:"Piloto", movimiento:"Cuarzo", anio:2019, resistencia:50, precio:150, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"Ironman Triathlon 30-Lap", pais:"Estados Unidos", estilo:"Deportivo/Digital", movimiento:"Cuarzo digital", anio:1994, resistencia:100, precio:50, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Standard", pais:"Estados Unidos", estilo:"Casual", movimiento:"Cuarzo", anio:2020, resistencia:30, precio:50, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"Legacy", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo", anio:2018, resistencia:30, precio:60, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Giorgio Galli S1", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo", anio:2019, resistencia:30, precio:250, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"Sport", pais:"Estados Unidos", estilo:"Deportivo", movimiento:"Cuarzo", anio:1990, resistencia:100, precio:60, complicacion:"Fechador"},
+      {marca:"Timex", modelo:"Viscount", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Mecánico manual", anio:1960, resistencia:30, precio:180, complicacion:"Sin complicación"},
+      {marca:"Timex", modelo:"T80", pais:"Estados Unidos", estilo:"Casual/Digital", movimiento:"Cuarzo digital", anio:1980, resistencia:30, precio:50, complicacion:"Fechador"},
 
-    {marca:"Rolex", modelo:"Submariner", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1953, resistencia:300},
-    {marca:"Rolex", modelo:"Datejust", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1945, resistencia:100},
-    {marca:"Rolex", modelo:"Daytona", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1963, resistencia:100},
+      // ---- Rolex ----
+      {marca:"Rolex", modelo:"Submariner", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1953, resistencia:300, precio:9500, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Datejust", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1945, resistencia:100, precio:8000, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Daytona", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1963, resistencia:100, precio:15000, complicacion:"Cronógrafo"},
+      {marca:"Rolex", modelo:"GMT-Master II", pais:"Suiza", estilo:"Deportivo/Viajero", movimiento:"Automático", anio:1955, resistencia:100, precio:11000, complicacion:"GMT / segundo huso"},
+      {marca:"Rolex", modelo:"Explorer", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1953, resistencia:100, precio:7500, complicacion:"Sin complicación"},
+      {marca:"Rolex", modelo:"Explorer II", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1971, resistencia:100, precio:9500, complicacion:"GMT / segundo huso"},
+      {marca:"Rolex", modelo:"Sea-Dweller", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1967, resistencia:1220, precio:12000, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Yacht-Master", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1992, resistencia:100, precio:13000, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Milgauss", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1956, resistencia:100, precio:9500, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Air-King", pais:"Suiza", estilo:"Dress/Deportivo", movimiento:"Automático", anio:1945, resistencia:100, precio:7400, complicacion:"Sin complicación"},
+      {marca:"Rolex", modelo:"Day-Date", pais:"Suiza", estilo:"Dress/Lujo", movimiento:"Automático", anio:1956, resistencia:100, precio:38000, complicacion:"Día y fecha"},
+      {marca:"Rolex", modelo:"Oyster Perpetual", pais:"Suiza", estilo:"Dress/Casual", movimiento:"Automático", anio:1926, resistencia:100, precio:6000, complicacion:"Sin complicación"},
+      {marca:"Rolex", modelo:"Cellini", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Manual", anio:1928, resistencia:30, precio:20000, complicacion:"Sin complicación"},
+      {marca:"Rolex", modelo:"Sky-Dweller", pais:"Suiza", estilo:"Dress/Viajero", movimiento:"Automático", anio:2012, resistencia:100, precio:16000, complicacion:"Calendario anual"},
+      {marca:"Rolex", modelo:"Deepsea", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2008, resistencia:3900, precio:13500, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Prince Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual", anio:1928, resistencia:30, precio:10000, complicacion:"Sin complicación"},
+      {marca:"Rolex", modelo:"Turn-O-Graph", pais:"Suiza", estilo:"Dress/Deportivo", movimiento:"Automático", anio:1953, resistencia:100, precio:8500, complicacion:"Fechador"},
+      {marca:"Rolex", modelo:"Precision Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual", anio:1950, resistencia:30, precio:3000, complicacion:"Sin complicación"},
+      {marca:"Rolex", modelo:"Zerografo Histórico", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Manual", anio:1937, resistencia:30, precio:25000, complicacion:"Cronógrafo"},
 
-    {marca:"Cartier", modelo:"Tank", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo/Mecánico", anio:1917, resistencia:30},
-    {marca:"Cartier", modelo:"Santos", pais:"Francia", estilo:"Dress/Deportivo", movimiento:"Automático", anio:1904, resistencia:100},
-    {marca:"Cartier", modelo:"Ballon Bleu", pais:"Francia", estilo:"Dress", movimiento:"Automático", anio:2007, resistencia:30},
+      // ---- Cartier ----
+      {marca:"Cartier", modelo:"Tank", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo/Mecánico", anio:1917, resistencia:30, precio:4000, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Santos", pais:"Francia", estilo:"Dress/Deportivo", movimiento:"Automático", anio:1904, resistencia:100, precio:7500, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Ballon Bleu", pais:"Francia", estilo:"Dress", movimiento:"Automático", anio:2007, resistencia:30, precio:6000, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Pasha", pais:"Francia", estilo:"Dress/Deportivo", movimiento:"Automático", anio:1985, resistencia:100, precio:6500, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Panthère", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo", anio:1983, resistencia:30, precio:4500, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Drive de Cartier", pais:"Francia", estilo:"Dress", movimiento:"Automático", anio:2016, resistencia:30, precio:6000, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Ronde Solo", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo/Automático", anio:2013, resistencia:30, precio:3500, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Tortue", pais:"Francia", estilo:"Dress/Vintage", movimiento:"Manual", anio:1912, resistencia:30, precio:15000, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Crash", pais:"Francia", estilo:"Dress/Arte", movimiento:"Manual/Cuarzo", anio:1967, resistencia:30, precio:40000, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Baignoire", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo", anio:1912, resistencia:30, precio:5000, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Clé de Cartier", pais:"Francia", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:30, precio:6000, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Tank Française", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo/Automático", anio:1996, resistencia:30, precio:4500, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Tank Louis Cartier", pais:"Francia", estilo:"Dress", movimiento:"Manual", anio:1922, resistencia:30, precio:10000, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Rotonde", pais:"Francia", estilo:"Dress/Complicación", movimiento:"Automático/Manual", anio:2010, resistencia:30, precio:20000, complicacion:"Tourbillon"},
+      {marca:"Cartier", modelo:"Santos Dumont", pais:"Francia", estilo:"Dress", movimiento:"Manual/Cuarzo", anio:1904, resistencia:30, precio:5500, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Roadster", pais:"Francia", estilo:"Dress/Deportivo", movimiento:"Automático", anio:2001, resistencia:100, precio:6000, complicacion:"Fechador"},
+      {marca:"Cartier", modelo:"Maillon", pais:"Francia", estilo:"Dress", movimiento:"Cuarzo", anio:2020, resistencia:30, precio:3200, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Privé Vintage Reissue", pais:"Francia", estilo:"Dress/Vintage", movimiento:"Manual", anio:2020, resistencia:30, precio:12000, complicacion:"Sin complicación"},
+      {marca:"Cartier", modelo:"Diabolo", pais:"Francia", estilo:"Dress/Vintage", movimiento:"Manual", anio:1990, resistencia:30, precio:15000, complicacion:"Sin complicación"},
 
-    {marca:"Longines", modelo:"Master Collection", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2005, resistencia:30},
-    {marca:"Longines", modelo:"HydroConquest", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2007, resistencia:300},
-    {marca:"Longines", modelo:"Spirit", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2020, resistencia:100},
+      // ---- Longines ----
+      {marca:"Longines", modelo:"Master Collection", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2005, resistencia:30, precio:2200, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"HydroConquest", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2007, resistencia:300, precio:1300, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Spirit", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2020, resistencia:100, precio:2100, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Legend Diver", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1960, resistencia:300, precio:2800, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Heritage 1945", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Automático", anio:2017, resistencia:30, precio:2400, complicacion:"Sin complicación"},
+      {marca:"Longines", modelo:"Conquest", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático/Cuarzo", anio:1954, resistencia:100, precio:2000, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Flagship", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:1957, resistencia:30, precio:1800, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Avigation", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:1935, resistencia:100, precio:3200, complicacion:"GMT / segundo huso"},
+      {marca:"Longines", modelo:"DolceVita", pais:"Suiza", estilo:"Dress", movimiento:"Cuarzo", anio:1997, resistencia:30, precio:1200, complicacion:"Sin complicación"},
+      {marca:"Longines", modelo:"Presence", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1990, resistencia:30, precio:1500, complicacion:"Sin complicación"},
+      {marca:"Longines", modelo:"Record", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2017, resistencia:50, precio:2200, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Ultra-Chron", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1968, resistencia:100, precio:2900, complicacion:"Sin complicación"},
+      {marca:"Longines", modelo:"Lindbergh Hour Angle", pais:"Suiza", estilo:"Piloto", movimiento:"Manual", anio:1931, resistencia:30, precio:4500, complicacion:"Hora mundial"},
+      {marca:"Longines", modelo:"Column-Wheel Chronograph", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2011, resistencia:30, precio:3500, complicacion:"Cronógrafo"},
+      {marca:"Longines", modelo:"Silver Arrow", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual", anio:1956, resistencia:30, precio:3000, complicacion:"Sin complicación"},
+      {marca:"Longines", modelo:"Twenty-Four Hours", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:1950, resistencia:100, precio:3800, complicacion:"GMT / segundo huso"},
+      {marca:"Longines", modelo:"Elegant Collection", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2010, resistencia:30, precio:1600, complicacion:"Fechador"},
+      {marca:"Longines", modelo:"Sport Legend", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo", anio:1990, resistencia:100, precio:1200, complicacion:"Cronógrafo"},
+      {marca:"Longines", modelo:"Master Collection Moonphase", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Automático", anio:2010, resistencia:30, precio:2800, complicacion:"Fase lunar"},
 
-    {marca:"Patek Philippe", modelo:"Calatrava", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1932, resistencia:30},
-    {marca:"Patek Philippe", modelo:"Nautilus", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:1976, resistencia:120},
-    {marca:"Patek Philippe", modelo:"Aquanaut", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1997, resistencia:120},
+      // ---- Patek Philippe ----
+      {marca:"Patek Philippe", modelo:"Calatrava", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1932, resistencia:30, precio:30000, complicacion:"Sin complicación"},
+      {marca:"Patek Philippe", modelo:"Nautilus", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:1976, resistencia:120, precio:45000, complicacion:"Fechador"},
+      {marca:"Patek Philippe", modelo:"Aquanaut", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1997, resistencia:120, precio:35000, complicacion:"Fechador"},
+      {marca:"Patek Philippe", modelo:"Golden Ellipse", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1968, resistencia:30, precio:35000, complicacion:"Sin complicación"},
+      {marca:"Patek Philippe", modelo:"Grand Complications", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Automático", anio:1989, resistencia:30, precio:150000, complicacion:"Calendario perpetuo"},
+      {marca:"Patek Philippe", modelo:"Twenty-4", pais:"Suiza", estilo:"Dress (mujer)", movimiento:"Cuarzo/Automático", anio:1999, resistencia:30, precio:25000, complicacion:"Sin complicación"},
+      {marca:"Patek Philippe", modelo:"Gondolo", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1993, resistencia:30, precio:40000, complicacion:"Sin complicación"},
+      {marca:"Patek Philippe", modelo:"Perpetual Calendar", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Automático", anio:1941, resistencia:30, precio:100000, complicacion:"Calendario perpetuo"},
+      {marca:"Patek Philippe", modelo:"World Time", pais:"Suiza", estilo:"Dress/Viajero", movimiento:"Automático", anio:1937, resistencia:30, precio:65000, complicacion:"Hora mundial"},
+      {marca:"Patek Philippe", modelo:"Chronograph Vintage", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Manual", anio:1923, resistencia:30, precio:80000, complicacion:"Cronógrafo"},
+      {marca:"Patek Philippe", modelo:"Nautilus Travel Time", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:2006, resistencia:120, precio:55000, complicacion:"GMT / segundo huso"},
+      {marca:"Patek Philippe", modelo:"Calatrava Pilot Travel Time", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2015, resistencia:60, precio:40000, complicacion:"GMT / segundo huso"},
+      {marca:"Patek Philippe", modelo:"Referencia 96 Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual", anio:1932, resistencia:30, precio:60000, complicacion:"Sin complicación"},
+      {marca:"Patek Philippe", modelo:"Sky Moon Tourbillon", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Manual", anio:2001, resistencia:30, precio:1500000, complicacion:"Tourbillon"},
+      {marca:"Patek Philippe", modelo:"Ladies First Chronograph", pais:"Suiza", estilo:"Dress (mujer)", movimiento:"Automático", anio:2009, resistencia:30, precio:45000, complicacion:"Cronógrafo"},
+      {marca:"Patek Philippe", modelo:"Aquanaut Luce", pais:"Suiza", estilo:"Deportivo (mujer)", movimiento:"Cuarzo", anio:2003, resistencia:120, precio:38000, complicacion:"Fechador"},
+      {marca:"Patek Philippe", modelo:"Referencia 5711", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:2006, resistencia:120, precio:150000, complicacion:"Fechador"},
+      {marca:"Patek Philippe", modelo:"Referencia 3700 Nautilus Original", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:1976, resistencia:120, precio:200000, complicacion:"Fechador"},
+      {marca:"Patek Philippe", modelo:"Calatrava Weekly Calendar", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2020, resistencia:30, precio:42000, complicacion:"Día y fecha"},
 
-    {marca:"Omega", modelo:"Speedmaster Moonwatch", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Mecánico manual", anio:1957, resistencia:50},
-    {marca:"Omega", modelo:"Seamaster Diver 300M", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1993, resistencia:300},
-    {marca:"Omega", modelo:"Constellation", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1952, resistencia:100},
+      // ---- Omega ----
+      {marca:"Omega", modelo:"Speedmaster Moonwatch", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Mecánico manual", anio:1957, resistencia:50, precio:7000, complicacion:"Cronógrafo"},
+      {marca:"Omega", modelo:"Seamaster Diver 300M", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1993, resistencia:300, precio:5500, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Constellation", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1952, resistencia:100, precio:6000, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"De Ville", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:1960, resistencia:30, precio:4500, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Seamaster Planet Ocean", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2005, resistencia:600, precio:6500, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Speedmaster Racing", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1968, resistencia:50, precio:6500, complicacion:"Cronógrafo"},
+      {marca:"Omega", modelo:"Seamaster 300 Heritage", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1957, resistencia:300, precio:6000, complicacion:"Sin complicación"},
+      {marca:"Omega", modelo:"Constellation Globemaster", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:100, precio:8500, complicacion:"Calendario anual"},
+      {marca:"Omega", modelo:"De Ville Prestige", pais:"Suiza", estilo:"Dress", movimiento:"Cuarzo/Automático", anio:1993, resistencia:30, precio:3500, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Aqua Terra", pais:"Suiza", estilo:"Deportivo/Dress", movimiento:"Automático", anio:2002, resistencia:150, precio:6000, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Speedmaster Mark II", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:60, precio:6500, complicacion:"Cronógrafo"},
+      {marca:"Omega", modelo:"Seamaster Bullhead", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:60, precio:8000, complicacion:"Cronógrafo"},
+      {marca:"Omega", modelo:"Ranchero", pais:"Suiza", estilo:"Deportivo/Vintage", movimiento:"Manual", anio:1958, resistencia:60, precio:7000, complicacion:"Sin complicación"},
+      {marca:"Omega", modelo:"Railmaster", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1957, resistencia:150, precio:5800, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Dynamic", pais:"Suiza", estilo:"Deportivo/Vintage", movimiento:"Automático", anio:1968, resistencia:60, precio:5000, complicacion:"Sin complicación"},
+      {marca:"Omega", modelo:"Genève Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual/Automático", anio:1969, resistencia:30, precio:3000, complicacion:"Sin complicación"},
+      {marca:"Omega", modelo:"Speedmaster '57", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2017, resistencia:50, precio:7000, complicacion:"Cronógrafo"},
+      {marca:"Omega", modelo:"Constellation Manhattan", pais:"Suiza", estilo:"Dress", movimiento:"Cuarzo/Automático", anio:1982, resistencia:100, precio:4500, complicacion:"Fechador"},
+      {marca:"Omega", modelo:"Seamaster Ploprof", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1970, resistencia:600, precio:9500, complicacion:"Fechador"},
 
-    {marca:"TAG Heuer", modelo:"Carrera", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1963, resistencia:100},
-    {marca:"TAG Heuer", modelo:"Monaco", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:100},
-    {marca:"TAG Heuer", modelo:"Aquaracer", pais:"Suiza", estilo:"Buceo", movimiento:"Automático/Cuarzo", anio:2004, resistencia:300},
+      // ---- TAG Heuer ----
+      {marca:"TAG Heuer", modelo:"Carrera", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1963, resistencia:100, precio:4500, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Monaco", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:100, precio:6000, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"Aquaracer", pais:"Suiza", estilo:"Buceo", movimiento:"Automático/Cuarzo", anio:2004, resistencia:300, precio:2200, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Heuer Autavia", pais:"Suiza", estilo:"Cronógrafo/Piloto", movimiento:"Automático", anio:1962, resistencia:100, precio:5500, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Formula 1", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo", anio:1986, resistencia:200, precio:1500, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Link", pais:"Suiza", estilo:"Dress/Deportivo", movimiento:"Automático/Cuarzo", anio:1999, resistencia:100, precio:3000, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Connected", pais:"Suiza", estilo:"Deportivo/Smartwatch", movimiento:"Cuarzo (digital)", anio:2015, resistencia:50, precio:2000, complicacion:"Sin complicación"},
+      {marca:"TAG Heuer", modelo:"Heuer Camaro", pais:"Suiza", estilo:"Cronógrafo/Vintage", movimiento:"Manual", anio:1968, resistencia:30, precio:5000, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"Heuer Silverstone", pais:"Suiza", estilo:"Cronógrafo/Vintage", movimiento:"Automático", anio:1974, resistencia:30, precio:6500, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"TAG Heuer 1000", pais:"Suiza", estilo:"Buceo", movimiento:"Cuarzo", anio:1980, resistencia:200, precio:2500, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Kirium", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo/Automático", anio:1997, resistencia:100, precio:2000, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"2000 Series", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo", anio:1982, resistencia:200, precio:1800, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Heuer Skipper", pais:"Suiza", estilo:"Cronógrafo/Náutico", movimiento:"Manual", anio:1968, resistencia:30, precio:7000, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"S/el", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo/Automático", anio:1987, resistencia:100, precio:2200, complicacion:"Fechador"},
+      {marca:"TAG Heuer", modelo:"Carrera Calibre 1887", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2010, resistencia:100, precio:5500, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"Autavia Jo Siffert", pais:"Suiza", estilo:"Cronógrafo/Piloto", movimiento:"Automático", anio:2019, resistencia:100, precio:5800, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"Monza", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1976, resistencia:30, precio:7500, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"Heuer Bundeswehr", pais:"Suiza", estilo:"Cronógrafo/Militar", movimiento:"Manual", anio:1969, resistencia:100, precio:6000, complicacion:"Cronógrafo"},
+      {marca:"TAG Heuer", modelo:"Aquaracer Professional 300", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2021, resistencia:300, precio:3200, complicacion:"Fechador"},
 
-    {marca:"Zenith", modelo:"El Primero A386", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:30},
-    {marca:"Zenith", modelo:"Defy", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1969, resistencia:100},
-    {marca:"Zenith", modelo:"Pilot Type 20", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2012, resistencia:100},
+      // ---- Zenith ----
+      {marca:"Zenith", modelo:"El Primero A386", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:30, precio:9000, complicacion:"Cronógrafo"},
+      {marca:"Zenith", modelo:"Defy", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:1969, resistencia:100, precio:7500, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Pilot Type 20", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2012, resistencia:100, precio:6800, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Chronomaster", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:1969, resistencia:50, precio:8500, complicacion:"Cronógrafo"},
+      {marca:"Zenith", modelo:"Elite", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1994, resistencia:50, precio:5500, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Academy", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Manual", anio:2007, resistencia:30, precio:60000, complicacion:"Reserva de marcha"},
+      {marca:"Zenith", modelo:"Rainbow Vintage", pais:"Suiza", estilo:"Cronógrafo/Vintage", movimiento:"Automático", anio:1969, resistencia:30, precio:15000, complicacion:"Cronógrafo"},
+      {marca:"Zenith", modelo:"Espada", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2013, resistencia:50, precio:5000, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Defy Lab", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático (oscilador nuevo)", anio:2017, resistencia:50, precio:20000, complicacion:"Sin complicación"},
+      {marca:"Zenith", modelo:"Captain", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2012, resistencia:50, precio:5500, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Class", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2004, resistencia:30, precio:4500, complicacion:"Sin complicación"},
+      {marca:"Zenith", modelo:"Chronomaster Sport", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2021, resistencia:100, precio:10500, complicacion:"Cronógrafo"},
+      {marca:"Zenith", modelo:"El Primero Striking 10th", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2010, resistencia:50, precio:12000, complicacion:"Cronógrafo"},
+      {marca:"Zenith", modelo:"Port Royal", pais:"Suiza", estilo:"Dress", movimiento:"Cuarzo/Automático", anio:2002, resistencia:30, precio:4000, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Pilot Montre d'Aéronef", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2016, resistencia:100, precio:8000, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"Defy Skyline", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:2022, resistencia:100, precio:9500, complicacion:"Fechador"},
+      {marca:"Zenith", modelo:"El Primero Revival", pais:"Suiza", estilo:"Cronógrafo/Vintage", movimiento:"Automático", anio:2019, resistencia:50, precio:9000, complicacion:"Cronógrafo"},
+      {marca:"Zenith", modelo:"Academy Christophe Colomb", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Manual", anio:2010, resistencia:30, precio:90000, complicacion:"Tourbillon"},
+      {marca:"Zenith", modelo:"Type 20 Extra Special", pais:"Suiza", estilo:"Piloto", movimiento:"Automático", anio:2017, resistencia:100, precio:7500, complicacion:"Fechador"},
 
-    {marca:"Tudor", modelo:"Black Bay", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2012, resistencia:200},
-    {marca:"Tudor", modelo:"Pelagos", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2012, resistencia:500},
-    {marca:"Tudor", modelo:"Royal", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2020, resistencia:100},
+      // ---- Tudor ----
+      {marca:"Tudor", modelo:"Black Bay", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2012, resistencia:200, precio:3800, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Pelagos", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2012, resistencia:500, precio:4800, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Royal", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2020, resistencia:100, precio:2600, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Submariner Vintage", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1954, resistencia:200, precio:8000, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"North Flag", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:2015, resistencia:100, precio:3900, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Heritage Chrono", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2010, resistencia:70, precio:5200, complicacion:"Cronógrafo"},
+      {marca:"Tudor", modelo:"Black Bay GMT", pais:"Suiza", estilo:"Deportivo/Viajero", movimiento:"Automático", anio:2018, resistencia:200, precio:4200, complicacion:"GMT / segundo huso"},
+      {marca:"Tudor", modelo:"1926", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2018, resistencia:100, precio:2100, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Glamour", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2010, resistencia:30, precio:2400, complicacion:"Sin complicación"},
+      {marca:"Tudor", modelo:"Ranger", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:2022, resistencia:100, precio:3300, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Fastrider", pais:"Suiza", estilo:"Deportivo", movimiento:"Automático", anio:2013, resistencia:150, precio:3000, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Style", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:2013, resistencia:100, precio:2200, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Black Bay Chrono", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Automático", anio:2017, resistencia:200, precio:5300, complicacion:"Cronógrafo"},
+      {marca:"Tudor", modelo:"Advisor Vintage", pais:"Suiza", estilo:"Dress/Complicación", movimiento:"Manual", anio:1957, resistencia:30, precio:6000, complicacion:"Sin complicación"},
+      {marca:"Tudor", modelo:"Oysterdate Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Automático", anio:1970, resistencia:100, precio:3000, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Monarch", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:2000, resistencia:30, precio:2000, complicacion:"Sin complicación"},
+      {marca:"Tudor", modelo:"Prince Date", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:1990, resistencia:100, precio:2500, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Black Bay Fifty-Eight", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2018, resistencia:200, precio:3900, complicacion:"Fechador"},
+      {marca:"Tudor", modelo:"Black Bay Ceramic", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:2021, resistencia:200, precio:5300, complicacion:"Fechador"},
 
-    {marca:"Grand Seiko", modelo:"Snowflake (SBGA211)", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Spring Drive", anio:2010, resistencia:100},
-    {marca:"Grand Seiko", modelo:"Heritage 9S", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:1998, resistencia:100},
-    {marca:"Grand Seiko", modelo:"Spring Drive Diver", pais:"Japón", estilo:"Buceo", movimiento:"Spring Drive", anio:2017, resistencia:200},
+      // ---- Grand Seiko ----
+      {marca:"Grand Seiko", modelo:"Snowflake SBGA211", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Spring Drive", anio:2010, resistencia:100, precio:6200, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Heritage 9S", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:1998, resistencia:100, precio:4500, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Spring Drive Diver", pais:"Japón", estilo:"Buceo", movimiento:"Spring Drive", anio:2017, resistencia:200, precio:6500, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"44GS Vintage", pais:"Japón", estilo:"Dress/Vintage", movimiento:"Manual", anio:1967, resistencia:30, precio:8000, complicacion:"Sin complicación"},
+      {marca:"Grand Seiko", modelo:"Elegance Collection", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2017, resistencia:50, precio:4800, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Sport Collection", pais:"Japón", estilo:"Deportivo", movimiento:"Automático", anio:2017, resistencia:200, precio:5000, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Heritage Diver SLGA", pais:"Japón", estilo:"Buceo", movimiento:"Spring Drive", anio:2020, resistencia:200, precio:7500, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"61GS Vintage", pais:"Japón", estilo:"Dress/Vintage", movimiento:"Automático", anio:1967, resistencia:30, precio:9000, complicacion:"Sin complicación"},
+      {marca:"Grand Seiko", modelo:"Hi-Beat 36000", pais:"Japón", estilo:"Dress", movimiento:"Automático", anio:2009, resistencia:100, precio:6000, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Kodo", pais:"Japón", estilo:"Dress/Complicación", movimiento:"Manual", anio:2020, resistencia:30, precio:60000, complicacion:"Reserva de marcha"},
+      {marca:"Grand Seiko", modelo:"White Birch", pais:"Japón", estilo:"Dress/Deportivo", movimiento:"Automático", anio:2021, resistencia:100, precio:8500, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Tentagraph", pais:"Japón", estilo:"Cronógrafo", movimiento:"Spring Drive/Mecánico", anio:2023, resistencia:200, precio:9500, complicacion:"Cronógrafo"},
+      {marca:"Grand Seiko", modelo:"SBGV Quartz", pais:"Japón", estilo:"Dress", movimiento:"Cuarzo", anio:2010, resistencia:100, precio:3800, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Historical Collection", pais:"Japón", estilo:"Dress/Vintage reissue", movimiento:"Automático", anio:2020, resistencia:50, precio:5500, complicacion:"Sin complicación"},
+      {marca:"Grand Seiko", modelo:"Evolution 9", pais:"Japón", estilo:"Deportivo", movimiento:"Automático", anio:2020, resistencia:100, precio:6800, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"Shunbun", pais:"Japón", estilo:"Dress", movimiento:"Spring Drive", anio:2021, resistencia:100, precio:6200, complicacion:"Fechador"},
+      {marca:"Grand Seiko", modelo:"SBGJ GMT", pais:"Japón", estilo:"Deportivo/Viajero", movimiento:"Automático", anio:2015, resistencia:200, precio:7000, complicacion:"GMT / segundo huso"},
+      {marca:"Grand Seiko", modelo:"Credor Vintage", pais:"Japón", estilo:"Dress/Lujo", movimiento:"Manual", anio:1974, resistencia:30, precio:15000, complicacion:"Sin complicación"},
+      {marca:"Grand Seiko", modelo:"Peacock", pais:"Japón", estilo:"Dress", movimiento:"Spring Drive", anio:2021, resistencia:100, precio:7500, complicacion:"Fechador"},
 
-    {marca:"Hamilton", modelo:"Khaki Field", pais:"Estados Unidos", estilo:"Militar/Campo", movimiento:"Automático", anio:1980, resistencia:50},
-    {marca:"Hamilton", modelo:"Ventura", pais:"Estados Unidos", estilo:"Dress/Vanguardista", movimiento:"Cuarzo/Automático", anio:1957, resistencia:30},
-    {marca:"Hamilton", modelo:"Jazzmaster", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2003, resistencia:50},
+      // ---- Hamilton ----
+      {marca:"Hamilton", modelo:"Khaki Field", pais:"Estados Unidos", estilo:"Militar/Campo", movimiento:"Automático", anio:1980, resistencia:50, precio:600, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Ventura", pais:"Estados Unidos", estilo:"Dress/Vanguardista", movimiento:"Cuarzo/Automático", anio:1957, resistencia:30, precio:1000, complicacion:"Sin complicación"},
+      {marca:"Hamilton", modelo:"Jazzmaster", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2003, resistencia:50, precio:900, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Khaki Aviation", pais:"Estados Unidos", estilo:"Piloto", movimiento:"Automático", anio:1990, resistencia:100, precio:900, complicacion:"GMT / segundo huso"},
+      {marca:"Hamilton", modelo:"Pan Europ", pais:"Estados Unidos", estilo:"Deportivo/Vintage", movimiento:"Automático", anio:1971, resistencia:100, precio:1100, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"American Classic", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:2010, resistencia:30, precio:600, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Intra-Matic", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Automático", anio:1957, resistencia:50, precio:900, complicacion:"Sin complicación"},
+      {marca:"Hamilton", modelo:"Boulton", pais:"Estados Unidos", estilo:"Dress", movimiento:"Cuarzo/Automático", anio:2000, resistencia:30, precio:700, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Khaki Navy", pais:"Estados Unidos", estilo:"Buceo", movimiento:"Automático", anio:2000, resistencia:100, precio:800, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Broadway", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2010, resistencia:30, precio:800, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"X-Wind", pais:"Estados Unidos", estilo:"Piloto", movimiento:"Automático", anio:2010, resistencia:100, precio:1500, complicacion:"GMT / segundo huso"},
+      {marca:"Hamilton", modelo:"Railroad", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:50, precio:700, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Electric Ventura Vintage", pais:"Estados Unidos", estilo:"Dress", movimiento:"Eléctrico", anio:1957, resistencia:30, precio:1200, complicacion:"Sin complicación"},
+      {marca:"Hamilton", modelo:"Khaki Pilot Pioneer", pais:"Estados Unidos", estilo:"Piloto", movimiento:"Automático", anio:2013, resistencia:100, precio:800, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Khaki King", pais:"Estados Unidos", estilo:"Militar/Campo", movimiento:"Automático", anio:2010, resistencia:100, precio:900, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Spirit of Liberty", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2005, resistencia:30, precio:700, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Valiant Vintage", pais:"Estados Unidos", estilo:"Dress/Vintage", movimiento:"Manual", anio:1950, resistencia:30, precio:500, complicacion:"Sin complicación"},
+      {marca:"Hamilton", modelo:"Khaki Scuba", pais:"Estados Unidos", estilo:"Buceo", movimiento:"Automático", anio:2010, resistencia:200, precio:900, complicacion:"Fechador"},
+      {marca:"Hamilton", modelo:"Jazzmaster Face2Face", pais:"Estados Unidos", estilo:"Dress", movimiento:"Automático", anio:2010, resistencia:50, precio:1600, complicacion:"Sin complicación"},
 
-    {marca:"Tissot", modelo:"PRX", pais:"Suiza", estilo:"Deportivo/Dress", movimiento:"Cuarzo/Automático", anio:1978, resistencia:100},
-    {marca:"Tissot", modelo:"Seastar", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1962, resistencia:300},
-    {marca:"Tissot", modelo:"Le Locle", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2000, resistencia:30},
+      // ---- Tissot ----
+      {marca:"Tissot", modelo:"PRX", pais:"Suiza", estilo:"Deportivo/Dress", movimiento:"Cuarzo/Automático", anio:1978, resistencia:100, precio:450, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Seastar", pais:"Suiza", estilo:"Buceo", movimiento:"Automático", anio:1962, resistencia:300, precio:550, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Le Locle", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2000, resistencia:30, precio:600, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"T-Touch", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo (táctil)", anio:1999, resistencia:100, precio:800, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Gentleman", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:50, precio:700, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Chemin des Tourelles", pais:"Suiza", estilo:"Dress", movimiento:"Automático", anio:2012, resistencia:30, precio:650, complicacion:"Sin complicación"},
+      {marca:"Tissot", modelo:"Heritage 1973", pais:"Suiza", estilo:"Cronógrafo/Vintage", movimiento:"Cuarzo/Automático", anio:2018, resistencia:100, precio:900, complicacion:"Cronógrafo"},
+      {marca:"Tissot", modelo:"Visodate Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Automático", anio:1957, resistencia:30, precio:500, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"PR100", pais:"Suiza", estilo:"Dress/Deportivo", movimiento:"Cuarzo/Automático", anio:1988, resistencia:100, precio:400, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Sideral Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Automático", anio:1971, resistencia:30, precio:500, complicacion:"Sin complicación"},
+      {marca:"Tissot", modelo:"Navigator Vintage", pais:"Suiza", estilo:"Dress/Viajero/Vintage", movimiento:"Manual", anio:1954, resistencia:30, precio:600, complicacion:"Sin complicación"},
+      {marca:"Tissot", modelo:"Supersonic Vintage", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual", anio:1960, resistencia:30, precio:550, complicacion:"Sin complicación"},
+      {marca:"Tissot", modelo:"Sea-Touch", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo (táctil)", anio:2007, resistencia:100, precio:700, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Ballade", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:1980, resistencia:30, precio:400, complicacion:"Sin complicación"},
+      {marca:"Tissot", modelo:"Quickster", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo", anio:2013, resistencia:100, precio:350, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Couturier", pais:"Suiza", estilo:"Dress", movimiento:"Automático/Cuarzo", anio:2007, resistencia:100, precio:500, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Racing Touch", pais:"Suiza", estilo:"Deportivo", movimiento:"Cuarzo (táctil)", anio:2005, resistencia:100, precio:600, complicacion:"Fechador"},
+      {marca:"Tissot", modelo:"Heritage Petite Seconde", pais:"Suiza", estilo:"Dress/Vintage", movimiento:"Manual", anio:2016, resistencia:30, precio:700, complicacion:"Sin complicación"},
+      {marca:"Tissot", modelo:"1973 Chronograph", pais:"Suiza", estilo:"Cronógrafo/Vintage", movimiento:"Automático", anio:2018, resistencia:100, precio:900, complicacion:"Cronógrafo"},
 
-    {marca:"Breguet", modelo:"Classique", pais:"Francia", estilo:"Dress", movimiento:"Mecánico", anio:1775, resistencia:30},
-    {marca:"Breguet", modelo:"Marine", pais:"Francia", estilo:"Deportivo", movimiento:"Automático", anio:1990, resistencia:100},
-    {marca:"Breguet", modelo:"Type XX", pais:"Francia", estilo:"Piloto/Cronógrafo", movimiento:"Automático", anio:1954, resistencia:100},
+      // ---- Breguet ----
+      {marca:"Breguet", modelo:"Classique", pais:"Francia", estilo:"Dress", movimiento:"Mecánico", anio:1775, resistencia:30, precio:25000, complicacion:"Sin complicación"},
+      {marca:"Breguet", modelo:"Marine", pais:"Francia", estilo:"Deportivo", movimiento:"Automático", anio:1990, resistencia:100, precio:20000, complicacion:"Fechador"},
+      {marca:"Breguet", modelo:"Type XX", pais:"Francia", estilo:"Piloto/Cronógrafo", movimiento:"Automático", anio:1954, resistencia:100, precio:18000, complicacion:"Cronógrafo"},
+      {marca:"Breguet", modelo:"Tradition", pais:"Francia", estilo:"Dress/Complicación", movimiento:"Manual/Automático", anio:2005, resistencia:30, precio:45000, complicacion:"Sin complicación"},
+      {marca:"Breguet", modelo:"Reine de Naples", pais:"Francia", estilo:"Dress (mujer)", movimiento:"Automático", anio:2002, resistencia:30, precio:30000, complicacion:"Sin complicación"},
+      {marca:"Breguet", modelo:"Heritage", pais:"Francia", estilo:"Dress", movimiento:"Automático/Manual", anio:2003, resistencia:30, precio:28000, complicacion:"Sin complicación"},
+      {marca:"Breguet", modelo:"La Musicale", pais:"Francia", estilo:"Dress/Complicación", movimiento:"Manual", anio:2019, resistencia:30, precio:200000, complicacion:"Repetición de minutos"},
+      {marca:"Breguet", modelo:"Classique Complications", pais:"Francia", estilo:"Dress/Complicación", movimiento:"Manual", anio:1990, resistencia:30, precio:80000, complicacion:"Calendario perpetuo"},
+      {marca:"Breguet", modelo:"Marine Alarme Musicale", pais:"Francia", estilo:"Deportivo/Complicación", movimiento:"Automático", anio:2010, resistencia:100, precio:60000, complicacion:"Reserva de marcha"},
+      {marca:"Breguet", modelo:"Type XXI", pais:"Francia", estilo:"Piloto/Cronógrafo", movimiento:"Automático", anio:2004, resistencia:100, precio:20000, complicacion:"Cronógrafo"},
+      {marca:"Breguet", modelo:"Classique 5717 Tourbillon", pais:"Francia", estilo:"Dress/Complicación", movimiento:"Manual", anio:2010, resistencia:30, precio:150000, complicacion:"Tourbillon"},
+      {marca:"Breguet", modelo:"Souscription Histórico", pais:"Francia", estilo:"Dress/Vintage", movimiento:"Manual", anio:1798, resistencia:30, precio:40000, complicacion:"Sin complicación"},
+      {marca:"Breguet", modelo:"Perpétuelle Histórico", pais:"Francia", estilo:"Dress/Vintage", movimiento:"Manual", anio:1780, resistencia:30, precio:50000, complicacion:"Reserva de marcha"},
+      {marca:"Breguet", modelo:"Marine Chronographe", pais:"Francia", estilo:"Deportivo/Cronógrafo", movimiento:"Automático", anio:2007, resistencia:100, precio:35000, complicacion:"Cronógrafo"},
+      {marca:"Breguet", modelo:"Classique Dame", pais:"Francia", estilo:"Dress (mujer)", movimiento:"Cuarzo/Automático", anio:2000, resistencia:30, precio:22000, complicacion:"Sin complicación"},
+      {marca:"Breguet", modelo:"Type XX Aeronavale", pais:"Francia", estilo:"Piloto/Cronógrafo", movimiento:"Automático", anio:1997, resistencia:100, precio:22000, complicacion:"Cronógrafo"},
+      {marca:"Breguet", modelo:"Marine Royale", pais:"Francia", estilo:"Deportivo/Buceo", movimiento:"Automático", anio:2006, resistencia:300, precio:40000, complicacion:"Fechador"},
+      {marca:"Breguet", modelo:"Tradition Fusée Tourbillon", pais:"Francia", estilo:"Dress/Complicación", movimiento:"Manual", anio:2011, resistencia:30, precio:180000, complicacion:"Tourbillon"},
+      {marca:"Breguet", modelo:"Classique Extra-Plate", pais:"Francia", estilo:"Dress", movimiento:"Automático", anio:2015, resistencia:30, precio:30000, complicacion:"Sin complicación"},
 
-    {marca:"Panerai", modelo:"Luminor", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Automático", anio:1993, resistencia:300},
-    {marca:"Panerai", modelo:"Radiomir", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Manual", anio:1938, resistencia:100},
-    {marca:"Panerai", modelo:"Submersible", pais:"Italia", estilo:"Buceo", movimiento:"Automático", anio:2019, resistencia:300},
+      // ---- Panerai ----
+      {marca:"Panerai", modelo:"Luminor", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Automático", anio:1993, resistencia:300, precio:8500, complicacion:"Fechador"},
+      {marca:"Panerai", modelo:"Radiomir", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Manual", anio:1938, resistencia:100, precio:8000, complicacion:"Sin complicación"},
+      {marca:"Panerai", modelo:"Submersible", pais:"Italia", estilo:"Buceo", movimiento:"Automático", anio:2019, resistencia:300, precio:10000, complicacion:"Fechador"},
+      {marca:"Panerai", modelo:"Luminor Marina", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Automático", anio:1993, resistencia:300, precio:7500, complicacion:"Sin complicación"},
+      {marca:"Panerai", modelo:"Luminor GMT", pais:"Italia", estilo:"Deportivo/Viajero", movimiento:"Automático", anio:1998, resistencia:300, precio:9500, complicacion:"GMT / segundo huso"},
+      {marca:"Panerai", modelo:"Radiomir California", pais:"Italia", estilo:"Dress/Vintage", movimiento:"Manual", anio:1938, resistencia:100, precio:9000, complicacion:"Sin complicación"},
+      {marca:"Panerai", modelo:"Luminor Chrono", pais:"Italia", estilo:"Cronógrafo", movimiento:"Automático", anio:1999, resistencia:100, precio:9500, complicacion:"Cronógrafo"},
+      {marca:"Panerai", modelo:"Mare Nostrum", pais:"Italia", estilo:"Cronógrafo/Náutico", movimiento:"Automático", anio:1993, resistencia:100, precio:12000, complicacion:"Cronógrafo"},
+      {marca:"Panerai", modelo:"Luminor Due", pais:"Italia", estilo:"Dress/Deportivo", movimiento:"Automático/Manual", anio:2016, resistencia:30, precio:7000, complicacion:"Sin complicación"},
+      {marca:"Panerai", modelo:"Radiomir 1940", pais:"Italia", estilo:"Buceo/Vintage", movimiento:"Automático/Manual", anio:2011, resistencia:100, precio:9500, complicacion:"Fechador"},
+      {marca:"Panerai", modelo:"Submersible Chrono", pais:"Italia", estilo:"Cronógrafo/Buceo", movimiento:"Automático", anio:2019, resistencia:300, precio:13000, complicacion:"Cronógrafo"},
+      {marca:"Panerai", modelo:"Luminor Base", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Manual", anio:1993, resistencia:300, precio:7000, complicacion:"Sin complicación"},
+      {marca:"Panerai", modelo:"Luminor Power Reserve", pais:"Italia", estilo:"Deportivo", movimiento:"Manual", anio:2000, resistencia:100, precio:9000, complicacion:"Reserva de marcha"},
+      {marca:"Panerai", modelo:"Radiomir S.L.C.", pais:"Italia", estilo:"Buceo/Militar/Vintage", movimiento:"Manual", anio:1956, resistencia:100, precio:15000, complicacion:"Sin complicación"},
+      {marca:"Panerai", modelo:"Luminor 1950", pais:"Italia", estilo:"Buceo/Militar", movimiento:"Automático", anio:2002, resistencia:300, precio:10000, complicacion:"Fechador"},
+      {marca:"Panerai", modelo:"Submersible QuarantaQuattro", pais:"Italia", estilo:"Buceo", movimiento:"Automático", anio:2022, resistencia:300, precio:9500, complicacion:"Fechador"},
+      {marca:"Panerai", modelo:"Radiomir Tourbillon", pais:"Italia", estilo:"Dress/Complicación", movimiento:"Manual", anio:2010, resistencia:100, precio:60000, complicacion:"Tourbillon"},
+      {marca:"Panerai", modelo:"Luminor Sealand", pais:"Italia", estilo:"Buceo/Ecológico", movimiento:"Automático", anio:2022, resistencia:300, precio:11000, complicacion:"Fechador"},
+      {marca:"Panerai", modelo:"Radiomir Egiziano", pais:"Italia", estilo:"Buceo/Vintage", movimiento:"Manual", anio:1955, resistencia:100, precio:25000, complicacion:"Sin complicación"},
 
-    {marca:"Swatch", modelo:"Original", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo", anio:1983, resistencia:30},
-    {marca:"Swatch", modelo:"Skin", pais:"Suiza", estilo:"Casual/Slim", movimiento:"Cuarzo", anio:1997, resistencia:30},
-    {marca:"Swatch", modelo:"Bioceramic MoonSwatch", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2022, resistencia:30},
+      // ---- Swatch ----
+      {marca:"Swatch", modelo:"Original", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo", anio:1983, resistencia:30, precio:90, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Skin", pais:"Suiza", estilo:"Casual/Slim", movimiento:"Cuarzo", anio:1997, resistencia:30, precio:100, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Bioceramic MoonSwatch", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2022, resistencia:30, precio:260, complicacion:"Cronógrafo"},
+      {marca:"Swatch", modelo:"Chrono", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:1990, resistencia:100, precio:150, complicacion:"Cronógrafo"},
+      {marca:"Swatch", modelo:"Irony", pais:"Suiza", estilo:"Casual/Metal", movimiento:"Cuarzo", anio:1994, resistencia:30, precio:120, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Scuba", pais:"Suiza", estilo:"Buceo", movimiento:"Cuarzo", anio:1990, resistencia:200, precio:100, complicacion:"Fechador"},
+      {marca:"Swatch", modelo:"Pop", pais:"Suiza", estilo:"Casual/Vintage", movimiento:"Cuarzo", anio:1986, resistencia:30, precio:70, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Automatic", pais:"Suiza", estilo:"Casual", movimiento:"Automático", anio:1990, resistencia:30, precio:150, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Sistem51", pais:"Suiza", estilo:"Casual", movimiento:"Automático", anio:2013, resistencia:30, precio:150, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Big Bold", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo", anio:2019, resistencia:50, precio:100, complicacion:"Fechador"},
+      {marca:"Swatch", modelo:"Paparazzi", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo (conectado)", anio:2004, resistencia:30, precio:100, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Beat Internet Time", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo", anio:1998, resistencia:30, precio:80, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Skin Irony", pais:"Suiza", estilo:"Casual/Slim", movimiento:"Cuarzo", anio:2011, resistencia:30, precio:130, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Flymagic", pais:"Suiza", estilo:"Casual/Vintage", movimiento:"Cuarzo", anio:1990, resistencia:30, precio:70, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Jellyfish", pais:"Suiza", estilo:"Casual/Vintage", movimiento:"Cuarzo", anio:1985, resistencia:30, precio:90, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"GZ Collection", pais:"Suiza", estilo:"Casual/Vintage", movimiento:"Cuarzo", anio:1983, resistencia:30, precio:80, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"MoonSwatch Mission to Neptune", pais:"Suiza", estilo:"Cronógrafo", movimiento:"Cuarzo", anio:2022, resistencia:30, precio:260, complicacion:"Cronógrafo"},
+      {marca:"Swatch", modelo:"Essentials", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo", anio:2020, resistencia:30, precio:70, complicacion:"Sin complicación"},
+      {marca:"Swatch", modelo:"Monthly Drops", pais:"Suiza", estilo:"Casual", movimiento:"Cuarzo", anio:2020, resistencia:30, precio:90, complicacion:"Sin complicación"},
 
-    {marca:"Richard Mille", modelo:"RM 011", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:2007, resistencia:50},
-    {marca:"Richard Mille", modelo:"RM 27 (Nadal)", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2010, resistencia:50},
-    {marca:"Richard Mille", modelo:"RM 07-01", pais:"Suiza", estilo:"Dress de lujo", movimiento:"Automático", anio:2011, resistencia:50}
-  ].map((w, i) => ({ ...w, id: i, fullName: w.marca + " " + w.modelo }));
+      // ---- Richard Mille ----
+      {marca:"Richard Mille", modelo:"RM 011", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:2007, resistencia:50, precio:200000, complicacion:"Cronógrafo"},
+      {marca:"Richard Mille", modelo:"RM 27 Nadal", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2010, resistencia:50, precio:900000, complicacion:"Sin complicación"},
+      {marca:"Richard Mille", modelo:"RM 07-01", pais:"Suiza", estilo:"Dress de lujo (mujer)", movimiento:"Automático", anio:2011, resistencia:50, precio:150000, complicacion:"Sin complicación"},
+      {marca:"Richard Mille", modelo:"RM 001", pais:"Suiza", estilo:"Dress/Complicación de lujo", movimiento:"Manual", anio:2001, resistencia:30, precio:300000, complicacion:"Tourbillon"},
+      {marca:"Richard Mille", modelo:"RM 030", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:2011, resistencia:50, precio:180000, complicacion:"Fechador"},
+      {marca:"Richard Mille", modelo:"RM 035", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2011, resistencia:50, precio:200000, complicacion:"Sin complicación"},
+      {marca:"Richard Mille", modelo:"RM 055", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2012, resistencia:50, precio:220000, complicacion:"Sin complicación"},
+      {marca:"Richard Mille", modelo:"RM 67-02", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:2018, resistencia:50, precio:160000, complicacion:"Sin complicación"},
+      {marca:"Richard Mille", modelo:"RM 65-01", pais:"Suiza", estilo:"Cronógrafo de lujo", movimiento:"Automático", anio:2019, resistencia:50, precio:250000, complicacion:"Cronógrafo"},
+      {marca:"Richard Mille", modelo:"RM 011 Flyback", pais:"Suiza", estilo:"Cronógrafo de lujo", movimiento:"Automático", anio:2007, resistencia:50, precio:220000, complicacion:"Cronógrafo"},
+      {marca:"Richard Mille", modelo:"RM 052 Skull", pais:"Suiza", estilo:"Dress/Complicación de lujo", movimiento:"Manual", anio:2012, resistencia:50, precio:350000, complicacion:"Tourbillon"},
+      {marca:"Richard Mille", modelo:"RM 016", pais:"Suiza", estilo:"Dress de lujo", movimiento:"Automático", anio:2007, resistencia:50, precio:190000, complicacion:"Fechador"},
+      {marca:"Richard Mille", modelo:"RM 022", pais:"Suiza", estilo:"Deportivo/Viajero de lujo", movimiento:"Manual", anio:2007, resistencia:50, precio:400000, complicacion:"GMT / segundo huso"},
+      {marca:"Richard Mille", modelo:"RM 39-01 Aviation", pais:"Suiza", estilo:"Piloto de lujo", movimiento:"Automático", anio:2015, resistencia:50, precio:280000, complicacion:"Cronógrafo"},
+      {marca:"Richard Mille", modelo:"RM 029", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Automático", anio:2010, resistencia:50, precio:200000, complicacion:"Fechador"},
+      {marca:"Richard Mille", modelo:"RM 038 Bubba Watson", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2013, resistencia:50, precio:300000, complicacion:"Tourbillon"},
+      {marca:"Richard Mille", modelo:"RM 59-01 Yohan Blake", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2013, resistencia:50, precio:250000, complicacion:"Tourbillon"},
+      {marca:"Richard Mille", modelo:"RM 12-01", pais:"Suiza", estilo:"Deportivo de lujo", movimiento:"Manual", anio:2018, resistencia:50, precio:280000, complicacion:"Tourbillon"},
+      {marca:"Richard Mille", modelo:"RM 07-04", pais:"Suiza", estilo:"Deportivo de lujo (mujer)", movimiento:"Automático", anio:2021, resistencia:50, precio:170000, complicacion:"Sin complicación"},
+    ].map((w, i) => ({ ...w, id: i, fullName: w.marca + " " + w.modelo }));
 
   // ---------------------------------------------------------------
   // Fondo decorativo: relojes ilustrados esparcidos
@@ -860,7 +1222,7 @@
     els.suggestions.innerHTML = matches.map((w, i) =>
       `<div class="suggestion-item" data-idx="${i}" role="option">
          <span class="suggestion-name">${w.modelo}</span>
-         <span class="suggestion-brand">${w.marca}</span>
+         <span class="suggestion-brand">${w.marca}, ${w.movimiento}</span>
        </div>`
     ).join("");
     els.suggestions.classList.add("open");
@@ -957,6 +1319,12 @@
     return { cls: "incorrect", arrow: guessVal < targetVal ? "⬆️" : "⬇️" };
   }
 
+  function formatPrice(n) {
+    if (n >= 1000000) return "$" + (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (n >= 1000) return "$" + Math.round(n / 1000) + "k";
+    return "$" + n;
+  }
+
   function renderGuessRow(g, animate) {
     const row = document.createElement("tr");
     row.className = "guess-row";
@@ -965,6 +1333,8 @@
     const paisCls = compareCategorical(g.pais, target.pais);
     const estiloCls = compareCategorical(g.estilo, target.estilo);
     const movCls = compareCategorical(g.movimiento, target.movimiento);
+    const complCls = compareCategorical(g.complicacion, target.complicacion);
+    const precioCmp = compareNumeric(g.precio, target.precio);
     const anioCmp = compareNumeric(g.anio, target.anio);
     const resCmp = compareNumeric(g.resistencia, target.resistencia);
 
@@ -974,6 +1344,8 @@
       <td><span class="tile ${paisCls}">${g.pais}</span></td>
       <td><span class="tile ${estiloCls}">${g.estilo}</span></td>
       <td><span class="tile ${movCls}">${g.movimiento}</span></td>
+      <td><span class="tile ${complCls}">${g.complicacion}</span></td>
+      <td><span class="tile ${precioCmp.cls}">${formatPrice(g.precio)} <span class="arrow">${precioCmp.arrow}</span></span></td>
       <td><span class="tile ${anioCmp.cls}">${g.anio} <span class="arrow">${anioCmp.arrow}</span></span></td>
       <td><span class="tile ${resCmp.cls}">${g.resistencia}m <span class="arrow">${resCmp.arrow}</span></span></td>
     `;
@@ -1073,6 +1445,8 @@
         g.pais === target.pais,
         g.estilo === target.estilo,
         g.movimiento === target.movimiento,
+        g.complicacion === target.complicacion,
+        g.precio === target.precio,
         g.anio === target.anio,
         g.resistencia === target.resistencia
       ];
