@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>RelojVLE — Adiviná el reloj del día</title>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-49T1NC2HXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-49T1NC2HXX');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1239,6 +1248,12 @@
     return `${now.getFullYear()}-${mm}-${dd}`;
   }
 
+  function track(eventName, params) {
+    try {
+      if (typeof gtag === "function") gtag("event", eventName, params || {});
+    } catch (e) { /* si falla el tracking, el juego sigue andando igual */ }
+  }
+
   function safeStorage() {
     try {
       const k = "__test__";
@@ -1578,10 +1593,14 @@
     });
   }
 
-  els.viewRankingBtn.addEventListener("click", revealResultsSections);
+  els.viewRankingBtn.addEventListener("click", () => {
+    track("ranking_mundial_click");
+    revealResultsSections();
+  });
 
   function finishGame(kind, tries) {
     const score = showResultBanner(kind, tries);
+    track("juego_completado", { resultado: kind, intentos: tries, puntaje: score, modo: practiceMode ? "practica" : "diario" });
     if (practiceMode) {
       // En modo práctica no hay alias ni envío al ranking: mostramos el botón directo.
       els.resultModalActions.classList.add("show");
@@ -1630,6 +1649,7 @@
     const alias = els.aliasInput.value.trim().slice(0, 20);
     if (!alias) { els.aliasInput.focus(); return; }
     setAlias(alias);
+    track("alias_guardado");
     els.aliasGate.classList.remove("show");
     const kind = els.aliasGate.dataset.pendingKind;
     const tries = parseInt(els.aliasGate.dataset.pendingTries, 10);
@@ -1715,6 +1735,10 @@
     els.input.value = "";
     selectedWatch = null;
 
+    if (guesses.length === 1 && !practiceMode) {
+      track("juego_iniciado", { modo: "diario" });
+    }
+
     if (watch.id === target.id) {
       won = true;
       finishGame("won", guesses.length);
@@ -1773,6 +1797,7 @@
   }
 
   els.shareBtn.addEventListener("click", async () => {
+    track("compartir_click");
     const tries = guesses.length;
     const result = won ? "won" : "gaveUp";
     const score = won ? computeScore(tries) : 0;
@@ -1829,6 +1854,7 @@
   }
 
   els.practiceBtn.addEventListener("click", () => {
+    track("modo_practica_click");
     practiceMode = true;
     target = pickRandomOtherWatch();
     guesses = [];
