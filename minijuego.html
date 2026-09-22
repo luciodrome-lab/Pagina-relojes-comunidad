@@ -338,70 +338,125 @@
     margin-top: 20px;
   }
 
-  /* ---------- banner de resultado ---------- */
-  .win-banner {
+  /* ---------- modal de resultado ---------- */
+  .result-modal-backdrop {
     display: none;
-    margin-top: 26px;
-    padding: 22px 24px;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(3,3,4,0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .result-modal-backdrop.show { display: flex; }
+
+  .result-modal {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px 28px 28px;
     border: 1px solid var(--gold-soft);
-    background: linear-gradient(135deg, rgba(201,162,39,0.14), rgba(201,162,39,0.04));
-    border-radius: 12px;
+    background: linear-gradient(160deg, #17151b 0%, #0d0c10 100%);
+    border-radius: 16px;
     text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    animation: modalIn 0.25s cubic-bezier(0.16,1,0.3,1);
   }
-  .win-banner.show { display: block; }
-  .win-banner.gave-up {
-    border-color: var(--line);
-    background: rgba(236,231,220,0.04);
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
-  .win-banner .win-title {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    color: var(--gold);
-    margin: 0 0 6px;
-  }
-  .win-banner.gave-up .win-title { color: var(--ink-dim); }
-  .win-banner p {
-    margin: 4px 0;
+  .result-modal.gave-up { border-color: var(--line); }
+
+  .result-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
     color: var(--ink-dim);
-    font-size: 0.92rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
   }
-  .win-banner strong { color: var(--ink); }
+  .result-modal-close:hover { color: var(--ink); border-color: var(--gold-soft); }
+
+  .result-modal .win-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--gold);
+    margin: 0 0 8px;
+  }
+  .result-modal.gave-up .win-title { color: var(--ink-dim); }
+  .result-modal p { margin: 4px 0; color: var(--ink-dim); font-size: 0.94rem; }
+  .result-modal strong { color: var(--ink); }
 
   .score-pill {
     display: inline-block;
-    margin-top: 10px;
-    padding: 6px 16px;
+    margin-top: 12px;
+    padding: 7px 18px;
     border-radius: 999px;
     background: rgba(201,168,106,0.14);
     color: var(--gold);
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1rem;
     letter-spacing: 0.02em;
   }
-  .win-banner.gave-up .score-pill {
+  .result-modal.gave-up .score-pill {
     background: rgba(236,231,220,0.06);
     color: var(--ink-dim);
   }
 
-  .share-btn {
-    margin-top: 16px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
+  .result-modal-actions {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .result-modal-actions.show { display: flex; }
+
+  .view-ranking-btn {
+    padding: 12px 20px;
     background: var(--gold);
     color: #1a1608;
     border: none;
     border-radius: 8px;
     font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.86rem;
+    font-weight: 700;
+    font-size: 0.92rem;
     cursor: pointer;
     transition: opacity 0.2s ease, transform 0.15s ease;
   }
-  .share-btn:hover { opacity: 0.88; }
+  .view-ranking-btn:hover { opacity: 0.88; }
+  .view-ranking-btn:active { transform: scale(0.98); }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.86rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+  }
+  .share-btn:hover { border-color: var(--gold-soft); }
   .share-btn:active { transform: scale(0.98); }
-  .share-btn.copied { background: var(--ok); color: #0a2b1c; }
+  .share-btn.copied { background: var(--ok); color: #0a2b1c; border-color: transparent; }
 
   .challenge-banner {
     display: none;
@@ -476,18 +531,18 @@
 
   .alias-gate {
     display: none;
-    margin: 14px 0;
-    padding: 14px 16px;
+    margin: 18px 0 4px;
+    padding: 16px;
     border: 1px solid var(--gold-soft);
     border-radius: 10px;
     background: rgba(201,168,106,0.06);
+    text-align: left;
   }
-  .alias-gate.show { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .alias-gate p { margin: 0 0 8px; width: 100%; color: var(--ink-dim); font-size: 0.84rem; }
+  .alias-gate.show { display: flex; flex-direction: column; gap: 10px; }
+  .alias-gate p { margin: 0; color: var(--ink-dim); font-size: 0.84rem; }
   .alias-gate input {
-    flex: 1;
-    min-width: 140px;
-    padding: 10px 12px;
+    width: 100%;
+    padding: 11px 12px;
     background: var(--card-bg);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -495,12 +550,12 @@
     font-family: var(--font-body);
   }
   .alias-gate button {
-    padding: 10px 18px;
+    padding: 11px 18px;
     background: var(--gold);
     color: #1a1608;
     border: none;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
   }
   .alias-note {
@@ -602,20 +657,26 @@
     <div class="empty-state" id="emptyState">Todavía no adivinaste ningún reloj. Empezá escribiendo arriba ☝️</div>
   </div>
 
-  <div class="alias-gate narrow" id="aliasGate">
-    <p>Para aparecer en el ranking mundial, elegí un alias (se guarda en este dispositivo):</p>
-    <input type="text" id="aliasInput" maxlength="20" placeholder="Tu alias, ej: RelojeroPro">
-    <button type="button" id="aliasSaveBtn">Guardar</button>
-  </div>
+  <!-- Modal de resultado: aparece al ganar o rendirse -->
+  <div class="result-modal-backdrop" id="resultModalBackdrop">
+    <div class="result-modal" id="resultModal">
+      <button class="result-modal-close" id="resultModalClose" type="button" aria-label="Cerrar">✕</button>
 
-  <div class="win-banner" id="winBanner">
-    <p class="win-title" id="winTitle">¡Correcto! ⌚</p>
-    <p id="winSubtitle">Era el <strong id="winAnswer"></strong>, en <strong id="winTries"></strong> intentos.</p>
-    <div class="score-pill" id="scorePill">0 puntos</div>
-    <br>
-    <button class="share-btn" id="shareBtn" type="button">
-      🔗 Compartir puntuación
-    </button>
+      <p class="win-title" id="winTitle">¡Correcto! ⌚</p>
+      <p id="winSubtitle">Era el <strong id="winAnswer"></strong>, en <strong id="winTries"></strong> intentos.</p>
+      <div class="score-pill" id="scorePill">0 puntos</div>
+
+      <div class="alias-gate" id="aliasGate">
+        <p>Para aparecer en el ranking mundial, elegí un alias (se guarda en este dispositivo):</p>
+        <input type="text" id="aliasInput" maxlength="20" placeholder="Tu alias, ej: RelojeroPro">
+        <button type="button" id="aliasSaveBtn">Guardar</button>
+      </div>
+
+      <div class="result-modal-actions" id="resultModalActions">
+        <button class="view-ranking-btn" id="viewRankingBtn" type="button">🌍 Ver ranking mundial</button>
+        <button class="share-btn" id="shareBtn" type="button">🔗 Compartir puntuación</button>
+      </div>
+    </div>
   </div>
 
   <section class="scores-section narrow" id="globalSection">
@@ -626,13 +687,15 @@
     </div>
   </section>
 
-  <section class="scores-section narrow">
-    <h2>Tus puntuaciones</h2>
-    <p class="scores-note">Guardadas en este dispositivo — historial personal.</p>
-    <div id="scoresTableWrap">
-      <div class="scores-empty" id="scoresEmpty">Todavía no completaste ninguna partida.</div>
-    </div>
-  </section>
+  <div id="resultsSections" style="display:none;">
+    <section class="scores-section narrow">
+      <h2>Tus puntuaciones</h2>
+      <p class="scores-note">Guardadas en este dispositivo — historial personal.</p>
+      <div id="scoresTableWrap">
+        <div class="scores-empty" id="scoresEmpty">Todavía no completaste ninguna partida.</div>
+      </div>
+    </section>
+  </div>
 
   <footer class="credits">
     Reloj del día — se repite igual para todos hasta la medianoche.<br>
@@ -1206,7 +1269,12 @@
     boardBody: document.getElementById("boardBody"),
     emptyState: document.getElementById("emptyState"),
     guessCount: document.getElementById("guessCount"),
-    winBanner: document.getElementById("winBanner"),
+    winBanner: document.getElementById("resultModal"),
+    resultModalBackdrop: document.getElementById("resultModalBackdrop"),
+    resultModalClose: document.getElementById("resultModalClose"),
+    resultModalActions: document.getElementById("resultModalActions"),
+    viewRankingBtn: document.getElementById("viewRankingBtn"),
+    resultsSections: document.getElementById("resultsSections"),
     winTitle: document.getElementById("winTitle"),
     winSubtitle: document.getElementById("winSubtitle"),
     winAnswer: document.getElementById("winAnswer"),
@@ -1237,8 +1305,13 @@
       guesses.forEach(g => renderGuessRow(g, false));
       if (guesses.length) els.emptyState.style.display = "none";
       updateGuessCount();
-      if (won) showResultBanner("won", guesses.length);
-      else if (gaveUp) showResultBanner("gaveUp", guesses.length);
+      if (won || gaveUp) {
+        // Ya jugó hoy: no reabrimos el modal, mostramos el resultado directo abajo.
+        els.input.disabled = true;
+        els.input.placeholder = won ? "¡Ya lo encontraste! 🎉" : "Partida terminada";
+        els.giveUpBtn.style.display = "none";
+        revealResultsSections();
+      }
     } catch (e) { /* ignora estado corrupto */ }
   }
 
@@ -1466,27 +1539,56 @@
   function showResultBanner(kind, tries) {
     const isWin = kind === "won";
     els.winBanner.classList.toggle("gave-up", !isWin);
-    els.winTitle.textContent = isWin ? "¡Correcto! ⌚" : "Te rendiste 🏳️";
+    els.winTitle.textContent = isWin ? "¡Ganaste! ⌚" : "Perdiste 🏳️";
     if (isWin) {
-      els.winSubtitle.innerHTML = `Era el <strong id="winAnswer">${target.fullName}</strong>, en <strong id="winTries">${tries === 1 ? "1 intento" : tries + " intentos"}</strong>.`;
+      els.winSubtitle.innerHTML = `El reloj era el <strong id="winAnswer">${target.fullName}</strong>, en <strong id="winTries">${tries === 1 ? "1 intento" : tries + " intentos"}</strong>.`;
     } else {
-      els.winSubtitle.innerHTML = `Era el <strong id="winAnswer">${target.fullName}</strong>. ¡La próxima lo tenés!`;
+      els.winSubtitle.innerHTML = `El reloj era el <strong id="winAnswer">${target.fullName}</strong>. ¡La próxima lo tenés!`;
     }
     const score = isWin ? computeScore(tries) : 0;
     els.scorePill.textContent = `${score} puntos`;
-    els.winBanner.classList.add("show");
+
+    // Reset: al abrir el modal, ocultamos ambos bloques hasta decidir cuál mostrar
+    els.aliasGate.classList.remove("show");
+    els.resultModalActions.classList.remove("show");
+
+    els.resultModalBackdrop.classList.add("show");
     els.input.disabled = true;
     els.input.placeholder = isWin ? "¡Ya lo encontraste! 🎉" : "Partida terminada";
     els.giveUpBtn.style.display = "none";
     return score;
   }
 
+  function closeResultModal() {
+    els.resultModalBackdrop.classList.remove("show");
+  }
+
+  els.resultModalClose.addEventListener("click", closeResultModal);
+  els.resultModalBackdrop.addEventListener("click", (e) => {
+    if (e.target === els.resultModalBackdrop) closeResultModal();
+  });
+
+  function revealResultsSections() {
+    els.resultsSections.style.display = "block";
+    fetchGlobalLeaderboard();
+    renderScoresTable();
+    closeResultModal();
+    requestAnimationFrame(() => {
+      document.getElementById("globalSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  els.viewRankingBtn.addEventListener("click", revealResultsSections);
+
   function finishGame(kind, tries) {
     const score = showResultBanner(kind, tries);
-    if (!practiceMode) {
-      pushHistoryEntry({ date: todayLabel(), result: kind, tries, score });
-      maybeSubmitGlobalScore(kind, tries, score);
+    if (practiceMode) {
+      // En modo práctica no hay alias ni envío al ranking: mostramos el botón directo.
+      els.resultModalActions.classList.add("show");
+      return score;
     }
+    pushHistoryEntry({ date: todayLabel(), result: kind, tries, score });
+    maybeSubmitGlobalScore(kind, tries, score);
     return score;
   }
 
@@ -1506,16 +1608,22 @@
   }
 
   function maybeSubmitGlobalScore(kind, tries, score) {
-    if (!scoresConfigured) return;
+    if (!scoresConfigured) {
+      els.resultModalActions.classList.add("show");
+      return;
+    }
     const alias = getAlias();
     if (!alias) {
       els.aliasGate.classList.add("show");
       els.aliasGate.dataset.pendingKind = kind;
       els.aliasGate.dataset.pendingTries = tries;
       els.aliasGate.dataset.pendingScore = score;
+      els.aliasInput.value = "";
+      setTimeout(() => els.aliasInput.focus(), 100);
       return;
     }
     submitGlobalScore(alias, kind, tries, score);
+    els.resultModalActions.classList.add("show");
   }
 
   els.aliasSaveBtn.addEventListener("click", () => {
@@ -1527,6 +1635,7 @@
     const tries = parseInt(els.aliasGate.dataset.pendingTries, 10);
     const score = parseInt(els.aliasGate.dataset.pendingScore, 10);
     if (kind) submitGlobalScore(alias, kind, tries, score);
+    els.resultModalActions.classList.add("show");
   });
   els.aliasInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") els.aliasSaveBtn.click();
@@ -1729,7 +1838,11 @@
     clearTimeout(giveUpTimer);
     els.boardBody.innerHTML = "";
     els.emptyState.style.display = "block";
-    els.winBanner.classList.remove("show", "gave-up");
+    closeResultModal();
+    els.winBanner.classList.remove("gave-up");
+    els.aliasGate.classList.remove("show");
+    els.resultModalActions.classList.remove("show");
+    els.resultsSections.style.display = "none";
     els.giveUpBtn.style.display = "inline-block";
     els.giveUpBtn.textContent = "Rendirme";
     els.giveUpBtn.classList.remove("confirming");
