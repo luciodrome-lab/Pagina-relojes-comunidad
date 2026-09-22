@@ -470,6 +470,55 @@
   .result-tag.won { color: var(--ok); }
   .result-tag.gave-up { color: var(--ink-dim); }
 
+  table.scores td.rank { font-variant-numeric: tabular-nums; color: var(--ink-dim); width: 34px; }
+  table.scores tr.is-me td { color: var(--gold); font-weight: 700; }
+  table.scores tr.is-me td:first-child { border-left: 2px solid var(--gold); }
+
+  .alias-gate {
+    display: none;
+    margin: 14px 0;
+    padding: 14px 16px;
+    border: 1px solid var(--gold-soft);
+    border-radius: 10px;
+    background: rgba(201,168,106,0.06);
+  }
+  .alias-gate.show { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .alias-gate p { margin: 0 0 8px; width: 100%; color: var(--ink-dim); font-size: 0.84rem; }
+  .alias-gate input {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+  .alias-gate button {
+    padding: 10px 18px;
+    background: var(--gold);
+    color: #1a1608;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .alias-note {
+    text-align: center;
+    font-size: 0.76rem;
+    color: var(--ink-dim);
+    margin: -4px 0 10px;
+  }
+  .alias-note button {
+    background: none;
+    border: none;
+    color: var(--gold);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.76rem;
+    padding: 0;
+  }
+
   footer.credits {
     text-align: center;
     margin-top: 50px;
@@ -553,6 +602,12 @@
     <div class="empty-state" id="emptyState">Todavía no adivinaste ningún reloj. Empezá escribiendo arriba ☝️</div>
   </div>
 
+  <div class="alias-gate narrow" id="aliasGate">
+    <p>Para aparecer en el ranking mundial, elegí un alias (se guarda en este dispositivo):</p>
+    <input type="text" id="aliasInput" maxlength="20" placeholder="Tu alias, ej: RelojeroPro">
+    <button type="button" id="aliasSaveBtn">Guardar</button>
+  </div>
+
   <div class="win-banner" id="winBanner">
     <p class="win-title" id="winTitle">¡Correcto! ⌚</p>
     <p id="winSubtitle">Era el <strong id="winAnswer"></strong>, en <strong id="winTries"></strong> intentos.</p>
@@ -563,9 +618,17 @@
     </button>
   </div>
 
+  <section class="scores-section narrow" id="globalSection">
+    <h2>🌍 Ranking mundial de hoy</h2>
+    <p class="scores-note">Se reinicia solo cada medianoche, junto con el reloj del día.</p>
+    <div id="globalTableWrap">
+      <div class="scores-empty" id="globalLoading">Cargando ranking…</div>
+    </div>
+  </section>
+
   <section class="scores-section narrow">
     <h2>Tus puntuaciones</h2>
-    <p class="scores-note">Guardadas en este dispositivo — no es un ranking global.</p>
+    <p class="scores-note">Guardadas en este dispositivo — historial personal.</p>
     <div id="scoresTableWrap">
       <div class="scores-empty" id="scoresEmpty">Todavía no completaste ninguna partida.</div>
     </div>
@@ -580,6 +643,27 @@
 <script>
 (function () {
   "use strict";
+
+  // ---------------------------------------------------------------
+  // Configuración del ranking mundial (Airtable)
+  // ---------------------------------------------------------------
+  // Completá estos 3 valores con los de TU base nueva y dedicada de puntuaciones
+  // (ver guía: base separada de la de "Relojes", token con scope solo a esa base).
+  const SCORES_BASE_ID = "appm25QOiYao2yQzO";
+  const SCORES_TABLE_NAME = "Puntuaciones";
+  const SCORES_PAT = "patE3ldJFkFp6KzBm.8c23e19ceb84e698032918752808e0da64105897f8697851e1ff81e8b9c05416";
+
+  const scoresConfigured = SCORES_BASE_ID !== "TU_BASE_ID_AQUI" && SCORES_PAT !== "TU_TOKEN_AQUI";
+
+  function scoresApiUrl(query) {
+    return `https://api.airtable.com/v0/${SCORES_BASE_ID}/${encodeURIComponent(SCORES_TABLE_NAME)}${query || ""}`;
+  }
+
+  function scoresHeaders(withContentType) {
+    const h = { Authorization: `Bearer ${SCORES_PAT}` };
+    if (withContentType) h["Content-Type"] = "application/json";
+    return h;
+  }
 
   // ---------------------------------------------------------------
   // Base de datos de relojes
@@ -1085,6 +1169,13 @@
     return `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
   }
 
+  function todayISO() {
+    const now = new Date();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    return `${now.getFullYear()}-${mm}-${dd}`;
+  }
+
   function safeStorage() {
     try {
       const k = "__test__";
@@ -1127,7 +1218,11 @@
     challengeBanner: document.getElementById("challengeBanner"),
     challengeTries: document.getElementById("challengeTries"),
     challengeScore: document.getElementById("challengeScore"),
-    scoresTableWrap: document.getElementById("scoresTableWrap")
+    scoresTableWrap: document.getElementById("scoresTableWrap"),
+    globalTableWrap: document.getElementById("globalTableWrap"),
+    aliasGate: document.getElementById("aliasGate"),
+    aliasInput: document.getElementById("aliasInput"),
+    aliasSaveBtn: document.getElementById("aliasSaveBtn")
   };
 
   function loadSavedState() {
@@ -1390,8 +1485,116 @@
     const score = showResultBanner(kind, tries);
     if (!practiceMode) {
       pushHistoryEntry({ date: todayLabel(), result: kind, tries, score });
+      maybeSubmitGlobalScore(kind, tries, score);
     }
     return score;
+  }
+
+  // ---------------------------------------------------------------
+  // Ranking mundial (Airtable) — alias + envío + lectura
+  // ---------------------------------------------------------------
+  const ALIAS_KEY = "relojvle_alias";
+
+  function getAlias() {
+    if (!storage) return null;
+    try { return storage.getItem(ALIAS_KEY); } catch (e) { return null; }
+  }
+
+  function setAlias(alias) {
+    if (!storage) return;
+    try { storage.setItem(ALIAS_KEY, alias); } catch (e) { /* sin persistencia, seguimos igual */ }
+  }
+
+  function maybeSubmitGlobalScore(kind, tries, score) {
+    if (!scoresConfigured) return;
+    const alias = getAlias();
+    if (!alias) {
+      els.aliasGate.classList.add("show");
+      els.aliasGate.dataset.pendingKind = kind;
+      els.aliasGate.dataset.pendingTries = tries;
+      els.aliasGate.dataset.pendingScore = score;
+      return;
+    }
+    submitGlobalScore(alias, kind, tries, score);
+  }
+
+  els.aliasSaveBtn.addEventListener("click", () => {
+    const alias = els.aliasInput.value.trim().slice(0, 20);
+    if (!alias) { els.aliasInput.focus(); return; }
+    setAlias(alias);
+    els.aliasGate.classList.remove("show");
+    const kind = els.aliasGate.dataset.pendingKind;
+    const tries = parseInt(els.aliasGate.dataset.pendingTries, 10);
+    const score = parseInt(els.aliasGate.dataset.pendingScore, 10);
+    if (kind) submitGlobalScore(alias, kind, tries, score);
+  });
+  els.aliasInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") els.aliasSaveBtn.click();
+  });
+
+  async function submitGlobalScore(alias, kind, tries, score) {
+    try {
+      await fetch(scoresApiUrl(), {
+        method: "POST",
+        headers: scoresHeaders(true),
+        body: JSON.stringify({
+          records: [{
+            fields: {
+              Alias: alias,
+              FechaKey: todayISO(),
+              Intentos: tries,
+              Puntaje: score,
+              Resultado: kind === "won" ? "won" : "gaveUp"
+            }
+          }]
+        })
+      });
+    } catch (e) { /* si falla el envío, el juego sigue andando igual */ }
+    fetchGlobalLeaderboard();
+  }
+
+  async function fetchGlobalLeaderboard() {
+    if (!scoresConfigured) {
+      els.globalTableWrap.innerHTML = '<div class="scores-empty">Ranking mundial no configurado todavía.</div>';
+      return;
+    }
+    try {
+      const formula = encodeURIComponent(`{FechaKey} = "${todayISO()}"`);
+      const query = `?filterByFormula=${formula}&sort%5B0%5D%5Bfield%5D=Puntaje&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=50`;
+      const res = await fetch(scoresApiUrl(query), { headers: scoresHeaders(false) });
+      if (!res.ok) throw new Error("Error de red");
+      const data = await res.json();
+      renderGlobalLeaderboard(data.records || []);
+    } catch (e) {
+      els.globalTableWrap.innerHTML = '<div class="scores-empty">No se pudo cargar el ranking en este momento.</div>';
+    }
+  }
+
+  function renderGlobalLeaderboard(records) {
+    if (!records.length) {
+      els.globalTableWrap.innerHTML = '<div class="scores-empty">Todavía nadie jugó hoy. ¡Sé el primero!</div>';
+      return;
+    }
+    const myAlias = getAlias();
+    const medals = ["🥇", "🥈", "🥉"];
+    const rows = records.map((r, i) => {
+      const f = r.fields || {};
+      const isMe = myAlias && f.Alias === myAlias;
+      return `
+        <tr class="${isMe ? "is-me" : ""}">
+          <td class="rank">${medals[i] || (i + 1)}</td>
+          <td>${f.Alias || "Anónimo"}</td>
+          <td>${f.Intentos ?? "—"}</td>
+          <td>${f.Puntaje ?? 0}</td>
+        </tr>
+      `;
+    }).join("");
+    els.globalTableWrap.innerHTML = `
+      <table class="scores">
+        <thead><tr><th></th><th>Alias</th><th>Intentos</th><th>Puntos</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
   }
 
   function submitGuess(watch) {
@@ -1541,6 +1744,7 @@
   // Init
   // ---------------------------------------------------------------
   renderScoresTable();
+  fetchGlobalLeaderboard();
   checkIncomingChallenge();
   loadSavedState();
 })();
